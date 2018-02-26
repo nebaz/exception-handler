@@ -1,0 +1,8 @@
+{
+  "name": "exception-handler",
+  "main": "index.js",
+  "version": "1.0.0",
+  "dependencies": {
+    "usleep": "^1.0.3"
+  }
+}
