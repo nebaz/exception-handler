@@ -1,4 +1,5 @@
 const Telegram = require(global._sdir + '/git_modules/telegram-notify');
+const os = require('os');
 
 class ExceptionHandler {
 
@@ -9,8 +10,9 @@ class ExceptionHandler {
   }
 
   async _catchException(type, error) {
-    console.error(new Date().toLocaleString(), type, error);
-    await this.telegram.sendTelegram(type + ': ' + error.message);
+    const hostname = os.hostname();
+    console.error(new Date().toLocaleString(), hostname, type, error);
+    await this.telegram.sendTelegram(hostname + ': ' + error.message);
     process.exit();
   }
 
