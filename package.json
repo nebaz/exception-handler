@@ -2,6 +2,10 @@
   "name": "exception-handler",
   "main": "index.js",
   "version": "1.0.0",
+  "description": "exception-handler",
+  "repository": "https://github.com/nebaz/exception-handler",
+  "license": "MIT",
+  "author": "Nebaz <nebaz@ya.ru>",
   "dependencies": {
     "usleep": "^1.0.3"
   }
