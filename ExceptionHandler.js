@@ -3,8 +3,8 @@ const os = require('os');
 
 class ExceptionHandler {
 
-  constructor(telegramToken, telegramAdminChatId) {
-    this.telegram = new Telegram(telegramToken, telegramAdminChatId);
+  constructor(telegramConfig) {
+    this.telegram = new Telegram(telegramConfig);
     process.on('uncaughtException', error => this._catchException('Exception', error));
     process.on('unhandledRejection', reason => this._catchException('Rejection', reason));
   }
