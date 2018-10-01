@@ -5,17 +5,25 @@ const {sleep} = require('usleep');
 const SLEEP_TIME_MIN_SECONDS_DEFAULT = 0;
 const SLEEP_TIME_STEP_SECONDS_DEFAULT = 5;
 const SLEEP_TIME_MAX_SECONDS_DEFAULT = 600;
-const SLEEP_TIME_REFRESH_RATE = 50;
+const APP_MIN_WORK_TIME_SECONDS = 2;
 const LAST_EXCEPTION_DATA_FILENAME = 'lastRun.json';
 
 class ExceptionHandler {
 
-  constructor(transport = null, sleepTimeMin = SLEEP_TIME_MIN_SECONDS_DEFAULT, sleepTimeStep = SLEEP_TIME_STEP_SECONDS_DEFAULT, sleepTimeMax = SLEEP_TIME_MAX_SECONDS_DEFAULT) {
+  constructor(
+    transport = null,
+    sleepTimeMin = SLEEP_TIME_MIN_SECONDS_DEFAULT,
+    sleepTimeStep = SLEEP_TIME_STEP_SECONDS_DEFAULT,
+    sleepTimeMax = SLEEP_TIME_MAX_SECONDS_DEFAULT,
+    minWorkTime = APP_MIN_WORK_TIME_SECONDS
+  ) {
+    this.appStartTime = new Date();
     this.transport = transport;
     this._setHandlers();
     this.sleepTimeMin = sleepTimeMin;
     this.sleepTimeStep = sleepTimeStep;
     this.sleepTimeMax = sleepTimeMax;
+    this.minWorkTime = minWorkTime;
   }
 
   _setHandlers() {
@@ -28,15 +36,15 @@ class ExceptionHandler {
     this.error = error;
 
     let errorTime = new Date();
-    await this._notify(errorTime);
+    await this._notify(errorTime, type, error);
     await sleep(this._calcSleepTime(errorTime));
     process.exit();
   }
 
-  async _notify(errorTime) {
+  async _notify(errorTime, type, error) {
     const hostname = os.hostname();
 
-    console.error(errorTime.toLocaleString(), hostname, this.type, this.error);
+    console.error(errorTime.toLocaleString(), hostname, type, error);
     if (this.transport) {
       await this.transport.send(hostname + ': ' + error.message);
     }
@@ -53,23 +61,21 @@ class ExceptionHandler {
       return this.sleepTimeMin;
     }
 
-    let exceptionData = this._getExceptionData();
-    let timeDiff = Math.abs(Math.round(errorTime.getTime() / 1000) - exceptionData.lastErrorTime);
+    let exception = this._getExceptionData();
 
-    let refreshRange = Math.ceil(this.sleepTimeStep * (SLEEP_TIME_REFRESH_RATE / 100));
-
-    if (exceptionData.sleepTime - refreshRange < timeDiff && timeDiff < exceptionData.sleepTime + refreshRange) {
-      if (exceptionData.sleepTime + this.sleepTimeStep <= this.sleepTimeMax) {
-        exceptionData.sleepTime += this.sleepTimeStep;
+    let appWorkTime = errorTime.getTime() / 1000 - this.appStartTime.getTime() / 1000;
+    if (appWorkTime < this.minWorkTime) {
+      if (exception.count > 0 && exception.sleepTime + this.sleepTimeStep <= this.sleepTimeMax) {
+        exception.sleepTime += this.sleepTimeStep;
       }
-    } else if (timeDiff > exceptionData.sleepTime) {
-      exceptionData = this._getDefaultExceptionData();
+    } else {
+      exception = this._getDefaultExceptionData();
     }
 
-    exceptionData.count += 1;
-    this._saveExceptionData(exceptionData, errorTime);
+    exception.count += 1;
+    this._saveExceptionData(exception);
 
-    return exceptionData.sleepTime;
+    return exception.sleepTime;
   }
 
   _getExceptionData() {
@@ -81,16 +87,14 @@ class ExceptionHandler {
     }
   }
 
-  _saveExceptionData(data, errorTime) {
-    data.lastErrorTime = Math.round(errorTime.getTime() / 1000);
+  _saveExceptionData(data) {
     fs.writeFileSync(LAST_EXCEPTION_DATA_FILENAME, JSON.stringify(data));
   }
 
   _getDefaultExceptionData() {
     return {
-      lastErrorTime: 0,
-      count: 0,
-      sleepTime: this.sleepTimeMin
+      sleepTime: 0,
+      count: 0
     };
   }
 }
