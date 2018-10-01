@@ -32,9 +32,6 @@ class ExceptionHandler {
   }
 
   async _catchException(type, error) {
-    this.type = type;
-    this.error = error;
-
     let errorTime = new Date();
     await this._notify(errorTime, type, error);
     await sleep(this._calcSleepTime(errorTime));
