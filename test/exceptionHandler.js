@@ -20,8 +20,6 @@ describe('/ExceptionHandler', async () => {
   });
 
 
-
-
   it('should correctly increase timeout', () => {
     let startTime = new Date();
     let min = 0, step = 5, max = 10;

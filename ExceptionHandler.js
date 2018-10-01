@@ -26,7 +26,7 @@ class ExceptionHandler {
   async _catchException(type, error) {
     this.type = type;
     this.error = error;
-    console.log('exception!');
+
     let errorTime = new Date();
     await this._notify(errorTime);
     await sleep(this._calcSleepTime(errorTime));
@@ -76,7 +76,7 @@ class ExceptionHandler {
     try {
       let data = fs.readFileSync(LAST_EXCEPTION_DATA_FILENAME);
       return JSON.parse(data);
-    } catch(e) {
+    } catch (e) {
       return this._getDefaultExceptionData();
     }
   }
