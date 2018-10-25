@@ -97,7 +97,10 @@ class ExceptionHandler {
   }
 
   _removeExceptionData() {
-    fs.unlinkSync(LAST_EXCEPTION_DATA_FILENAME);
+    try {
+      fs.unlinkSync(LAST_EXCEPTION_DATA_FILENAME);
+    } catch (e) {
+    }
   }
 }
 
